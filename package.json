@@ -16,5 +16,10 @@
     "url": "https://github.com/spglancy/CAH-Private-Server/issues"
   },
   "homepage": "https://github.com/spglancy/CAH-Private-Server#readme",
-  "dependencies": {}
+  "dependencies": {
+    "body-parser": "^1.18.3",
+    "express": "^4.16.4",
+    "mongoose": "^5.4.19",
+    "socket.io": "^2.2.0"
+  }
 }
