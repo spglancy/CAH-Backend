@@ -10,5 +10,6 @@ const io = require('socket.io')()
 
 const chatSocket = require('./controllers/chat')(io)
 const alertSocket = require('./controllers/alert')(io)
+const usersSocket = require('./controllers/users')(io)
 
 io.listen(port)
