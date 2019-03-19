@@ -5,7 +5,6 @@ const Schema = mongoose.Schema
 const UserSchema = new Schema({
   username: String,
   password: String,
-  score: Int16Array
 })
 
 // Salt that password
