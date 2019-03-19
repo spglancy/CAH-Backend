@@ -7,9 +7,8 @@ const port = 4000
 
 const io = require('socket.io')()
 
-
 const chatSocket = require('./controllers/chat')(io)
-const alertSocket = require('./controllers/alert')(io)
-const usersSocket = require('./controllers/users')(io)
+const gameSocket = require('./controllers/game')(io)
+const userSocket = require('./controllers/users')(io)
 
 io.listen(port)
