@@ -29,7 +29,7 @@ module.exports = (io) => {
               })
             }
             const token = jwt.sign({ _id: user._id, name: user.name }, process.env.SECRET, { expiresIn: '60 days' })
-            client.emit('loginres', {
+            client.emit('authRes', {
               result: 'Success',
               userId: user._id,
               token,
@@ -42,7 +42,7 @@ module.exports = (io) => {
     })
 
     client.on('Register', body => {
-      const { email, name, password, passwordConf } = body
+      const { email, password, passwordConf } = body
       let user = {}
       if (password === passwordConf) {
         user = new User(body)
@@ -54,7 +54,7 @@ module.exports = (io) => {
         if (!check) {
           user.save().then((u) => {
             const token = jwt.sign({ _id: u._id, name: u.name }, process.env.SECRET, { expiresIn: '60 days' })
-            client.emit('registerres',{
+            client.emit('authRes',{
               result: 'Success',
               userId: u._id,
               token,
