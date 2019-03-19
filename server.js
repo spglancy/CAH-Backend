@@ -9,6 +9,6 @@ const io = require('socket.io')()
 
 
 const chatSocket = require('./controllers/chat')(io)
-const alertSocket = require('./controllers/alert')(io)
+const gameSocket = require('./controllers/game')(io)
 
 io.listen(port)
