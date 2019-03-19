@@ -10,5 +10,4 @@ const gameSocket = require('./controllers/game')(io)
 const userSocket = require('./controllers/users')(io)
 const authController = require('./controllers/authController')(io)
 
-
-io.listen(port)
+io.listen(process.env.PORT)
