@@ -5,6 +5,8 @@ const LobbySchema = new Schema({
   users: [],
   whiteCards: [],
   blackCards: [],
+  strId: '',
+  sets: [],
   hands: [{ user: String, cards: String }],
 })
 

@@ -9,7 +9,7 @@ module.exports = (io) => {
       const email = body.email.toLowerCase()
       const password = body.password
       // Find this user name
-      User.findOne({ email }, 'email password')
+      User.findOne({ email })
         .then((user) => {
           if (!user) {
             // User not found
