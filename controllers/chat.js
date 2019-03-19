@@ -1,13 +1,13 @@
 
 module.exports = (io) => {
   
-  io.on('connection', (client) => {
+  // io.on('connection', (client) => {
 
-    client.on('chatMessage', (message) => {
-      io.emit('newMessage', message)
-    })
+    // client.on('chatMessage', (message) => {
+    //   io.emit('newMessage', message)
+    // })
 
-  })
+  // })
 
 
 }

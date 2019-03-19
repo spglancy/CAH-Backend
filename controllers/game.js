@@ -1,6 +1,5 @@
 
 module.exports = (io) => {
-  let currentLobby = null
   const Lobby = require('../models/Lobby')
 
   io.on('connection', (client) => {
@@ -19,7 +18,6 @@ module.exports = (io) => {
 
     client.on('Join Lobby', (lobbyId, username) => {
       client.join(lobbyId)
-      currentLobby = lobbyId
       Lobby.findById(lobbyId)
         .then(lobby => {
           lobby.users.push({ name: username, points: 0, client: client.id })
@@ -27,25 +25,16 @@ module.exports = (io) => {
             .then(lobby => {
               io.to(lobbyId).emit('Update Players', lobby.users)
             })
+            .catch(err => console.log(err))
 
         })
     })
 
-    client.on('disconnect', () => {
-      Lobby.findById(currentLobby)
-        .then(lobby => {
-          if (lobby) {
-            lobby.users = lobby.users.filter(user => user.client !== client.id)
-            lobby.save()
-              .then(lobby => {
-                io.to(lobby._id).emit('Update Players', lobby.users)
-              })
-              .catch(err => console.log(err))
-          }
-        })
-        .catch(err => console.log(err))
+    client.on('Chat Message', (message, username, lobby) => {
+      if (username) {
 
-
+        io.to(lobby).emit('New Message', message, username)
+      }
     })
 
   })
