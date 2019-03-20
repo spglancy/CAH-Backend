@@ -6,8 +6,12 @@ module.exports = (io) => {
   io.on('connection', (client) => {
 
     client.on('Create Lobby', (sets, strId, owner) => {
-      Lobby.create({ users: [], strId, sets , gameState: 'Idle', owner})
+      Lobby.create({ users: [], strId, sets, gameState: 'Idle', owner, currBlack: null, playedWhite: null })
         .then(lobby => {
+          for (let i = 0; i < lobby.sets.length; i++) {
+            lobby.blackCards = lobby.blackCards.concat(sets[i].blackCards)
+            lobby.whiteCards = lobby.whiteCards.concat(sets[i].whiteCards)
+          }
           lobby.save()
             .then(() => {
               client.emit("Lobby Created", lobby._id)
@@ -22,12 +26,23 @@ module.exports = (io) => {
       Lobby.findById(lobbyId)
         .then(lobby => {
           let owner = false
-          if(lobby.owner === user._id) {
+          if (lobby.owner === user._id) {
             owner = true
           }
-
-          if (!lobby.users.reduce((count, userCheck) => userCheck.id === user._id, 0)) {
-            lobby.users.push({ name: user.name, id: user._id, points: 0, czar: false, owner })
+          
+          if (!(lobby.users.reduce((me, userCheck) => {
+            console.log(userCheck.id, user._id, me)
+            if(userCheck.id === user._id) {
+              return(userCheck)
+            } else {
+              return me
+            }
+          }, null))) {
+            let cards = []
+            for (let i = 0; i < 10; i++) {
+              cards.push(lobby.whiteCards.pop(Math.floor(Math.random() * lobby.whiteCards.length)))
+            }
+            lobby.users.push({ name: user.name, id: user._id, points: 0, czar: false, owner, cards })
           }
           lobby.save()
             .then(lobby => {
@@ -40,7 +55,6 @@ module.exports = (io) => {
 
     client.on('Chat Message', (message, username, lobby) => {
       if (username) {
-
         io.to(lobby).emit('New Message', message, username)
       }
     })
