@@ -6,7 +6,7 @@ module.exports = (io) => {
   io.on('connection', (client) => {
 
     client.on('Create Lobby', (sets, strId, owner) => {
-      Lobby.create({ users: [], strId, sets, gameState: 'Idle', owner, currBlack: null, playedWhite: null })
+      Lobby.create({ users: [], strId, sets, gameState: 'Idle', owner, currBlack: null, playedWhite: [], czar: '' })
         .then(lobby => {
           for (let i = 0; i < lobby.sets.length; i++) {
             lobby.blackCards = lobby.blackCards.concat(sets[i].blackCards)
@@ -29,19 +29,19 @@ module.exports = (io) => {
           if (lobby.owner === user._id) {
             owner = true
           }
-          
+
           if (!(lobby.users.reduce((me, userCheck) => {
-            if(userCheck.id === user._id) {
-              return(userCheck)
+            if (userCheck.id === user._id) {
+              return (userCheck)
             } else {
               return me
             }
           }, null))) {
             let cards = []
             for (let i = 0; i < 10; i++) {
-              cards.push(lobby.whiteCards.splice(Math.floor(Math.random() * lobby.whiteCards.length),1)[0])
+              cards.push(lobby.whiteCards.splice(Math.floor(Math.random() * lobby.whiteCards.length), 1)[0])
             }
-            lobby.users.push({ name: user.name, id: user._id, points: 0, czar: false, owner, cards })
+            lobby.users.push({ name: user.name, id: user._id, points: 0, czar: false, owner, cards, played: false})
           }
           lobby.save()
             .then(lobby => {
@@ -60,14 +60,43 @@ module.exports = (io) => {
 
     client.on('Start Game', (lobbyId) => {
       Lobby.findById(lobbyId)
-      .then(lobby => {
-        lobby.gameState = 'Playing'
-        lobby.currBlack = lobby.blackCards.splice(Math.floor(Math.random()*lobby.blackCards.length), 1)[0]
-        lobby.save()
         .then(lobby => {
-          io.to(lobbyId).emit('Update Players', lobby)
+          lobby.gameState = 'Playing'
+          lobby.czar = lobby.users[0].id //Math.floor(Math.random()*lobby.users.length)
+
+          lobby.currBlack = lobby.blackCards.splice(Math.floor(Math.random() * lobby.blackCards.length), 1)[0]
+          lobby.save()
+            .then(lobby => {
+
+              io.to(lobbyId).emit('Update Players', lobby)
+            })
         })
-      })
+    })
+
+    client.on('Submit Card', (lobbyId, userId, card) => {
+      Lobby.findById(lobbyId)
+        .then(lobby => {
+          lobby.playedWhite.push({ card, userId })
+          const user = lobby.users.reduce((me, user) => {
+            if (user.id === userId) {
+              return user
+            }
+            return me
+          }, null)
+          user.cards.splice(user.cards.indexOf(card), 1)
+          user.played = true;
+          lobby.save()
+            .then(lobby => {
+              Lobby.findByIdAndUpdate(lobbyId, lobby)
+                .then(newLobby => {
+                  io.to(lobbyId).emit('Update Players', lobby)
+                })
+                .catch(err => console.log(err))
+
+            })
+        })
+        .catch(err => console.log(err))
+
     })
 
   })

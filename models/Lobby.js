@@ -7,9 +7,10 @@ const LobbySchema = new Schema({
   whiteCards: [],
   blackCards: [],
   currBlack: Object,
-  whitePlayed: [],
-  strId: '',
+  playedWhite: [],
+  strId: String,
   sets: [],
+  czar: String,
   gameState: String, //game states: Idle: waiting for people to join, Playing: players select cards, Selecting: card csar selects a winning card
   hands: [{ user: String, cards: String }],
 })
