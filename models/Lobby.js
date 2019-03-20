@@ -6,6 +6,8 @@ const LobbySchema = new Schema({
   owner: String,
   whiteCards: [],
   blackCards: [],
+  currBlack: Object,
+  whitePlayed: [],
   strId: '',
   sets: [],
   gameState: String, //game states: Idle: waiting for people to join, Playing: players select cards, Selecting: card csar selects a winning card

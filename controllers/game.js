@@ -31,7 +31,6 @@ module.exports = (io) => {
           }
           
           if (!(lobby.users.reduce((me, userCheck) => {
-            console.log(userCheck.id, user._id, me)
             if(userCheck.id === user._id) {
               return(userCheck)
             } else {
@@ -40,13 +39,13 @@ module.exports = (io) => {
           }, null))) {
             let cards = []
             for (let i = 0; i < 10; i++) {
-              cards.push(lobby.whiteCards.pop(Math.floor(Math.random() * lobby.whiteCards.length)))
+              cards.push(lobby.whiteCards.splice(Math.floor(Math.random() * lobby.whiteCards.length),1)[0])
             }
             lobby.users.push({ name: user.name, id: user._id, points: 0, czar: false, owner, cards })
           }
           lobby.save()
             .then(lobby => {
-              io.to(lobbyId).emit('Update Players', lobby.users)
+              io.to(lobbyId).emit('Update Players', lobby)
             })
             .catch(err => console.log(err))
 
@@ -57,6 +56,18 @@ module.exports = (io) => {
       if (username) {
         io.to(lobby).emit('New Message', message, username)
       }
+    })
+
+    client.on('Start Game', (lobbyId) => {
+      Lobby.findById(lobbyId)
+      .then(lobby => {
+        lobby.gameState = 'Playing'
+        lobby.currBlack = lobby.blackCards.splice(Math.floor(Math.random()*lobby.blackCards.length), 1)[0]
+        lobby.save()
+        .then(lobby => {
+          io.to(lobbyId).emit('Update Players', lobby)
+        })
+      })
     })
 
   })
