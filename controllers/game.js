@@ -5,9 +5,8 @@ module.exports = (io) => {
 
   io.on('connection', (client) => {
 
-    client.on('Create Lobby', (sets, strId) => {
-      console.log(strId)
-      Lobby.create({ users: [], strId, sets })
+    client.on('Create Lobby', (sets, strId, owner) => {
+      Lobby.create({ users: [], strId, sets , gameState: 'Idle', owner})
         .then(lobby => {
           lobby.save()
             .then(() => {
@@ -19,11 +18,17 @@ module.exports = (io) => {
     })
 
     client.on('Join Lobby', (lobbyId, user) => {
-      console.log(user)
       client.join(lobbyId)
       Lobby.findById(lobbyId)
         .then(lobby => {
-          lobby.users.push({ name: user.name, id: user._id, points: 0 })
+          let owner = false
+          if(lobby.owner === user._id) {
+            owner = true
+          }
+
+          if (!lobby.users.reduce((count, userCheck) => userCheck.id === user._id, 0)) {
+            lobby.users.push({ name: user.name, id: user._id, points: 0, czar: false, owner })
+          }
           lobby.save()
             .then(lobby => {
               io.to(lobbyId).emit('Update Players', lobby.users)
