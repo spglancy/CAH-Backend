@@ -6,6 +6,7 @@ module.exports = (io) => {
   io.on('connection', (client) => {
     // checks user auth and logs in
     client.on('Login', body => {
+      console.log("Login Request recieved")
       const email = body.email.toLowerCase()
       const password = body.password
       // Find this user name
@@ -42,6 +43,7 @@ module.exports = (io) => {
     })
 
     client.on('Register', body => {
+      console.log("Register request recieved")
       const { email, password, passwordConf } = body
       let user = {}
       if (password === passwordConf) {
