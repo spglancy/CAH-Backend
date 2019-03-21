@@ -14,7 +14,7 @@ module.exports = (io) => {
         .then((user) => {
           if (!user) {
             // User not found
-            client.emit('loginres', {
+            client.emit('authRes', {
               result: 'Unsuccessful',
               message: 'Wrong Email or Password',
             })
@@ -24,7 +24,7 @@ module.exports = (io) => {
           user.comparePassword(password, (err, isMatch) => {
             if (!isMatch) {
               // Password does not match
-              client.emit('loginres', { 
+              client.emit('authRes', { 
                 result: 'Unsuccessful',
                 message: 'Wrong Email or Password',
               })
@@ -49,7 +49,7 @@ module.exports = (io) => {
       if (password === passwordConf) {
         user = new User(body)
       } else {
-        return client.emit('registerres', { message: 'Passwords do not match' })
+        return client.emit('authRes', { message: 'Passwords do not match' })
       }
       user.email = user.email.toLowerCase()
       User.findOne({ email }).then((check) => {
@@ -63,7 +63,7 @@ module.exports = (io) => {
             })
           })
         } else {
-          client.emit('registerres',{
+          client.emit('authRes',{
             result: 'Unsuccessful',
             message: 'This Email is already in use',
           })
