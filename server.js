@@ -1,7 +1,8 @@
 const dotenv = require('dotenv').config()
-const mongoose = require('mongoose');
+const express = require('express')
+const app = express()
+const mongoose = require('mongoose')
 mongoose.connect(process.env.MONGODB_URL || 'mongodb://localhost/cah-backend');
-
 const io = require('socket.io')()
 
 const chatSocket = require('./controllers/chat')(io)
