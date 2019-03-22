@@ -14,6 +14,7 @@ module.exports = (io) => {
         .then((user) => {
           if (!user) {
             // User not found
+            console.log("res sent")
             client.emit('authRes', {
               result: 'Unsuccessful',
               message: 'Wrong Email or Password',
@@ -23,12 +24,14 @@ module.exports = (io) => {
           // not working for some reason
           user.comparePassword(password, (err, isMatch) => {
             if (!isMatch) {
+              console.log("res sent")
               // Password does not match
               client.emit('authRes', { 
                 result: 'Unsuccessful',
                 message: 'Wrong Email or Password',
               })
             }
+            console.log("res sent")
             const token = jwt.sign({ _id: user._id, name: user.name }, process.env.SECRET, { expiresIn: '60 days' })
             client.emit('authRes', {
               result: 'Success',
@@ -49,12 +52,14 @@ module.exports = (io) => {
       if (password === passwordConf) {
         user = new User(body)
       } else {
+        console.log("res sent")
         return client.emit('authRes', { message: 'Passwords do not match' })
       }
       user.email = user.email.toLowerCase()
       User.findOne({ email }).then((check) => {
         if (!check) {
           user.save().then((u) => {
+            console.log("res sent")
             const token = jwt.sign({ _id: u._id, name: u.name }, process.env.SECRET, { expiresIn: '60 days' })
             client.emit('authRes',{
               result: 'Success',
@@ -63,6 +68,7 @@ module.exports = (io) => {
             })
           })
         } else {
+          console.log("res sent")
           client.emit('authRes',{
             result: 'Unsuccessful',
             message: 'This Email is already in use',
