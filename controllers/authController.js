@@ -58,6 +58,7 @@ module.exports = (io) => {
       }
       user.email = user.email.toLowerCase()
       User.findOne({ email }).then((check) => {
+        console.log("wtf")
         if (!check) {
           user.save().then((u) => {
             console.log("res sent")
