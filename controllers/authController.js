@@ -12,6 +12,7 @@ module.exports = (io) => {
       // Find this user name
       User.findOne({ email })
         .then((user) => {
+          console.log("wtf")
           if (!user) {
             // User not found
             console.log("res sent")
