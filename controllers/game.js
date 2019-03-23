@@ -143,9 +143,6 @@ module.exports = (io) => {
 
     })
 
-    client.on('banner', () => {
-      io.emit('banner')
-    }) 
 
   })
 
