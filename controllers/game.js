@@ -98,29 +98,29 @@ module.exports = (io) => {
                 console.log("doesnt exist")
                 cardWins.create({ blackCard: lobby.currBlack.text, winningCards: { card, count: 1} })
               }
-            }).catch(err => console.log(err))
 
-          lobby.czar = lobby.users[(lobby.users.reduce((reducer, player, index) => (player.id === lobby.czar ? index : reducer), -1) + 1) % lobby.users.length].id
-          lobby.gameState = 'Playing'
-          do {
-            lobby.currBlack = lobby.blackCards.splice(Math.floor(Math.random() * lobby.blackCards.length), 1)[0]
-          }
-          while (lobby.currBlack.pick !== 1)  //temp makes sure all black cards are pick 1
-          lobby.playedWhite = []
-          for (let i = 0; i < lobby.users.length; i++) {
-            lobby.users[i].played = false;
-            lobby.users.set(i, lobby.users[i])
-          }
-          lobby.save()
-            .then(lobby => {
-              Lobby.findByIdAndUpdate(lobbyId, lobby)
-                .then(newLobby => {
-                  io.to(lobbyId).emit('Update Players', lobby)
+              lobby.czar = lobby.users[(lobby.users.reduce((reducer, player, index) => (player.id === lobby.czar ? index : reducer), -1) + 1) % lobby.users.length].id
+              lobby.gameState = 'Playing'
+              do {
+                lobby.currBlack = lobby.blackCards.splice(Math.floor(Math.random() * lobby.blackCards.length), 1)[0]
+              }
+              while (lobby.currBlack.pick !== 1)  //temp makes sure all black cards are pick 1
+              lobby.playedWhite = []
+              for (let i = 0; i < lobby.users.length; i++) {
+                lobby.users[i].played = false;
+                lobby.users.set(i, lobby.users[i])
+              }
+              lobby.save()
+                .then(lobby => {
+                  Lobby.findByIdAndUpdate(lobbyId, lobby)
+                    .then(newLobby => {
+                      io.to(lobbyId).emit('Update Players', lobby)
 
+                    })
                 })
             })
-        })
-    })
+      }).catch(err => console.log(err))
+    }).catch(err => console.log(err))
 
     client.on('Submit Card', (lobbyId, userId, card) => {
       Lobby.findById(lobbyId)
