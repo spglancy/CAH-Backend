@@ -122,7 +122,7 @@ module.exports = (io) => {
     client.on('Update Lobby', lobbyId => {
       Lobby.findById(lobbyId)
       .then(lobby => {
-        io.to(lobbyId).emit('Update Players', lobby)
+        client.emit('Update Players', lobby)
       })
     })
 
