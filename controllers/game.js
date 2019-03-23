@@ -85,20 +85,13 @@ module.exports = (io) => {
           // only issue with this code is the currBlack is NOT the current black card
           cardWins.findOne({ blackCard: lobby.currBlack.text })
             .then(bCard => {
-              console.log(bCard)
-              console.log(lobby.currBlack.text)
               if(bCard) {
-                console.log("exists")
-                console.log(card)
                 const index = bCard.winningCards.findIndex(i => i.card === card)
-                console.log(index)
                 bCard.winningCards[index].count += 1
                 bCard.save()
               } else {
-                console.log("doesnt exist")
                 cardWins.create({ blackCard: lobby.currBlack.text, winningCards: { card, count: 1} })
               }
-
               lobby.czar = lobby.users[(lobby.users.reduce((reducer, player, index) => (player.id === lobby.czar ? index : reducer), -1) + 1) % lobby.users.length].id
               lobby.gameState = 'Playing'
               do {
@@ -115,7 +108,6 @@ module.exports = (io) => {
                   Lobby.findByIdAndUpdate(lobbyId, lobby)
                     .then(newLobby => {
                       io.to(lobbyId).emit('Update Players', lobby)
-
                     })
                 })
             }).catch(err => console.log(err))
