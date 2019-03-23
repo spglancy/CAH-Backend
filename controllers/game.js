@@ -82,6 +82,7 @@ module.exports = (io) => {
           user.points += 1
           lobby.hands.unshift({ user: winner.userId, card: card, bCard: lobby.currBlack.text})
           // AI code to save blackcard win data
+          // only issue with this code is the currBlack is NOT the current black card
           cardWins.findOne({ blackCard: lobby.currBlack.text })
             .then(bCard => {
               console.log(bCard)
