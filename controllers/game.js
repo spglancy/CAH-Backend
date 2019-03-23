@@ -2,7 +2,7 @@
 module.exports = (io) => {
   const Lobby = require('../models/Lobby')
   const User = require('../models/user')
-
+  // git sucks
   io.on('connection', (client) => {
 
     client.on('Create Lobby', (sets, strId, owner) => {
