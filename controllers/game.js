@@ -85,6 +85,7 @@ module.exports = (io) => {
           cardWins.findOne({ blackCard: lobby.currBlack.text })
             .then(bCard => {
               console.log(bCard)
+              console.log(lobby.currBlack.text)
               if(bCard) {
                 console.log("exists")
                 console.log(card)
