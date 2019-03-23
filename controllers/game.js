@@ -80,23 +80,23 @@ module.exports = (io) => {
           winner = lobby.playedWhite.reduce((winner, playedCard) => (playedCard.card === card ? playedCard : winner), null)
           user = lobby.users.reduce((me, user) => (user.id === winner.userId ? user : me), null)
           user.points += 1
-          // lobby.hands.unshift({ user: winner.userId, card: card, bCard: lobby.currBlack.text})
-          // // AI code to save blackcard win data
-          // cardWins.findOne({ blackCard: lobby.currBlack.text })
-          //   .then(bCard => {
-          //     console.log(bCard)
-          //     if(bCard) {
-          //       console.log("exists")
-          //       console.log(card)
-          //       const index = bCard.winningCards.findIndex(i => i.card === card)
-          //       console.log(index)
-          //       bCard.winningCards[index].count += 1
-          //       bCard.save()
-          //     } else {
-          //       console.log("doesnt exist")
-          //       cardWins.create({ blackCard: lobby.currBlack.text, winningCards: { card, count: 1} })
-          //     }
-          //   }).catch(err => console.log(err))
+          lobby.hands.unshift({ user: winner.userId, card: card, bCard: lobby.currBlack.text})
+          // AI code to save blackcard win data
+          cardWins.findOne({ blackCard: lobby.currBlack.text })
+            .then(bCard => {
+              console.log(bCard)
+              if(bCard) {
+                console.log("exists")
+                console.log(card)
+                const index = bCard.winningCards.findIndex(i => i.card === card)
+                console.log(index)
+                bCard.winningCards[index].count += 1
+                bCard.save()
+              } else {
+                console.log("doesnt exist")
+                cardWins.create({ blackCard: lobby.currBlack.text, winningCards: { card, count: 1} })
+              }
+            }).catch(err => console.log(err))
 
           lobby.czar = lobby.users[(lobby.users.reduce((reducer, player, index) => (player.id === lobby.czar ? index : reducer), -1) + 1) % lobby.users.length].id
           lobby.gameState = 'Playing'
