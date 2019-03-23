@@ -1,6 +1,7 @@
 
 module.exports = (io) => {
   const Lobby = require('../models/Lobby')
+  const cardWins = require('../models/cardWins')
   io.on('connection', (client) => {
 
     client.on('Create Lobby', (sets, strId, owner) => {
@@ -79,6 +80,20 @@ module.exports = (io) => {
           winner = lobby.playedWhite.reduce((winner, playedCard) => (playedCard.card === card ? playedCard : winner), null)
           user = lobby.users.reduce((me, user) => (user.id === winner.userId ? user : me), null)
           user.points += 1
+          lobby.hands.unshift({ user: winner.userId, card: card, bCard: lobby.currBlack})
+          // AI code to save blackcard win data
+          cardWins.find({ blackCard: lobby.currBlack })
+            .then(bCard => {
+              if(!bCard) {
+                bCard.winningCards.push({ card, count: 1})
+                bCard.save()
+              } else {
+                  const index = bCard.winningCards.reduce((acc, winCard, index) => winCard.card === card ? index : acc)
+                  bCard.winningCards[index].count += 1
+                  bCard.save()
+              }
+            })
+
           lobby.czar = lobby.users[(lobby.users.reduce((reducer, player, index) => (player.id === lobby.czar ? index : reducer), -1) + 1) % lobby.users.length].id
           lobby.gameState = 'Playing'
           do {
@@ -140,10 +155,6 @@ module.exports = (io) => {
         .catch(err => console.log(err))
 
     })
-
-    client.on('banner', () => {
-      io.emit('banner')
-    }) 
 
   })
 

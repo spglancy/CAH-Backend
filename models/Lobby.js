@@ -12,7 +12,7 @@ const LobbySchema = new Schema({
   sets: [],
   czar: String,
   gameState: String, //game states: Idle: waiting for people to join, Playing: players select cards, Selecting: card csar selects a winning card
-  hands: [{ user: String, cards: String }],
+  hands: [{ user: String, card: String, bCard: String }],
 })
 
 module.exports = mongoose.model("Lobby", LobbySchema)
