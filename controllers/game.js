@@ -89,7 +89,7 @@ module.exports = (io) => {
               console.log(lobby.currBlack.text)
               if(bCard) {
                 console.log("exists")
-                console.log(card)
+                console.log(bCard)
                 const index = bCard.winningCards.findIndex(i => i.card === card)
                 console.log(index)
                 bCard.winningCards[index].count += 1
@@ -114,7 +114,7 @@ module.exports = (io) => {
                 .then(lobby => {
                   Lobby.findByIdAndUpdate(lobbyId, lobby)
                     .then(newLobby => {
-                      io.to(lobbyId).emit('Update Players', lobby)
+                      io.to(lobbyId).emit('Winning Card', winner)
 
                     })
                 })
@@ -122,16 +122,24 @@ module.exports = (io) => {
       }).catch(err => console.log(err))
     })
 
+    client.on('Update Lobby', lobbyId => {
+      Lobby.findById(lobbyId)
+      .then(lobby => {
+        io.to(lobbyId).emit('Update Players', lobby)
+      })
+    })
+
     client.on('Submit Card', (lobbyId, userId, card) => {
       Lobby.findById(lobbyId)
         .then(lobby => {
-          lobby.playedWhite.push({ card, userId })
           const user = lobby.users.reduce((me, user) => {
             if (user.id === userId) {
               return user
             }
             return me
           }, null)
+          lobby.playedWhite.push({ card, userId, name: user.name })
+          
           user.cards.splice(user.cards.indexOf(card), 1)
           user.cards.push(lobby.whiteCards.splice(Math.floor(Math.random() * lobby.whiteCards.length), 1)[0])
           user.played = true;
