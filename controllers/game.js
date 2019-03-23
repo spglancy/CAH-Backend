@@ -80,19 +80,19 @@ module.exports = (io) => {
           winner = lobby.playedWhite.reduce((winner, playedCard) => (playedCard.card === card ? playedCard : winner), null)
           user = lobby.users.reduce((me, user) => (user.id === winner.userId ? user : me), null)
           user.points += 1
-          // lobby.hands.unshift({ user: winner.userId, card: card, bCard: lobby.currBlack})
-          // // AI code to save blackcard win data
-          // cardWins.find({ blackCard: lobby.currBlack })
-          //   .then(bCard => {
-          //     if(!bCard) {
-          //       bCard.winningCards.push({ card, count: 1})
-          //       bCard.save()
-          //     } else {
-          //         const index = bCard.winningCards.reduce((acc, winCard, index) => winCard.card === card ? index : acc)
-          //         bCard.winningCards[index].count += 1
-          //         bCard.save()
-          //     }
-          //   })
+          lobby.hands.unshift({ user: winner.userId, card: card, bCard: lobby.currBlack.text})
+          // AI code to save blackcard win data
+          cardWins.findOne({ blackCard: lobby.currBlack.text })
+            .then(bCard => {
+              console.log(bCard)
+              if(bCard) {
+                const index = bCard.winningCards.reduce((acc, winCard, index) => winCard.card === card ? index : acc)
+                bCard.winningCards[index].count += 1
+                bCard.save()
+              } else {
+                cardWins.create({ blackCard: lobby.currBlack.text, winningCards: { card, count: 1} })
+              }
+            }).catch(err => console.log(err))
 
           lobby.czar = lobby.users[(lobby.users.reduce((reducer, player, index) => (player.id === lobby.czar ? index : reducer), -1) + 1) % lobby.users.length].id
           lobby.gameState = 'Playing'
@@ -109,7 +109,6 @@ module.exports = (io) => {
             .then(lobby => {
               Lobby.findByIdAndUpdate(lobbyId, lobby)
                 .then(newLobby => {
-                  console.log(newLobby.users[0].played)
                   io.to(lobbyId).emit('Update Players', lobby)
 
                 })
@@ -137,7 +136,6 @@ module.exports = (io) => {
 
                   if (newLobby.playedWhite.length === newLobby.users.length - 1) {
                     newLobby.gameState = 'Selecting'
-                    console.log('die bitch')
                     newLobby.save().then(
                       io.to(lobbyId).emit('Update Players', newLobby)
 
