@@ -118,9 +118,9 @@ module.exports = (io) => {
 
                     })
                 })
-            })
+            }).catch(err => console.log(err))
       }).catch(err => console.log(err))
-    }).catch(err => console.log(err))
+    })
 
     client.on('Submit Card', (lobbyId, userId, card) => {
       Lobby.findById(lobbyId)
