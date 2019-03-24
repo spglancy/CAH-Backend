@@ -2,12 +2,27 @@
 module.exports = (io) => {
   const Lobby = require('../models/Lobby')
   const cardWins = require('../models/cardWins')
+  const User = require('../models/user')
   io.on('connection', (client) => {
 
-    client.on('Create Lobby', (sets, strId, owner) => {
+    client.on('Create AI', (name) => {
+      User.create({ name })
+        .then(u => {
+          client.emit("Add AI", u)
+        })
+    })
+
+    client.on('Create Lobby', (sets, strId, owner, AI) => {
       Lobby.create({ users: [], strId, sets, gameState: 'Idle', owner, currBlack: null, playedWhite: [], czar: '' })
         .then(lobby => {
-          for (let i = 0; i < lobby.sets.length; i++) {
+          for(let x=0; x < AI.length; x++) {
+            let cards = []
+            for (let i = 0; i < 10; i++) {
+              cards.push(lobby.whiteCards.splice(Math.floor(Math.random() * lobby.whiteCards.length), 1)[0])
+            }
+            lobby.users.push({ name: AI[x].name, id: AI[x]._id, points: 0, czar: false, owner: false, cards, played: false })
+          }
+           for (let i = 0; i < lobby.sets.length; i++) {
             lobby.blackCards = lobby.blackCards.concat(sets[i].blackCards)
             lobby.whiteCards = lobby.whiteCards.concat(sets[i].whiteCards)
           }

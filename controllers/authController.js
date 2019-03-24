@@ -50,6 +50,7 @@ module.exports = (io) => {
         return client.emit('authRes', { message: 'Passwords do not match' })
       }
       user.email = user.email.toLowerCase()
+      user.ai = false
       User.findOne({ email }).then((check) => {
         if (!check) {
           user.save().then((u) => {
