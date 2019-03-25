@@ -12,8 +12,20 @@ module.exports = (io) => {
         })
     })
 
+    client.on('Find Lobby', (strId) => {
+      Lobby.find({strId})
+      .then(lobbies => {
+        if(lobbies.length > 0) {
+          client.emit("Lobby Found", lobbies[0]._id)
+        }
+        else{
+          client.emit("Lobby Not Found")
+        }
+      })
+    })
+
     client.on('Create Lobby', (sets, strId, owner, AI) => {
-      Lobby.create({ users: [], strId, sets, gameState: 'Idle', owner, currBlack: null, playedWhite: [], czar: '' })
+      Lobby.create({ users: [], strId, sets, gameState: 'Idle', owner, currBlack: null, playedWhite: [], czar: '' , creationDate: new Date()})
         .then(lobby => {
           for(let x=0; x < AI.length; x++) {
             let cards = []
