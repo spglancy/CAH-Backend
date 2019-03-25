@@ -12,79 +12,19 @@ module.exports = (io) => {
         })
     })
 
-    client.on('AI play', lobby => {
-      const AI = lobby.AIUsers
-      for(let i = 0; i < AI.length; i++) {
-        if(AI[i].played == false) {
-          cardWins.findOne({ blackCard: lobby.currBlack.text })
-          .then(bCard => {
-            if(bCard) {
-              let winCount = 0
-              const chosenCard = AI[i].cards.reduce((chosen, card) => {
-                const index = bCard.winningCards.findIndex(a => a.card === card)
-                if(index !== -1) {
-                  if(bCard.winningCards[index].count > winCount) {
-                    winCount = bCard.winningCards[index].count
-                    return card
-                  } else {
-                    return chosen
-                  }
-                } else {
-                  return chosen
-                }
-              })
-              client.emit('AI submit', lobby._id, AI[i].id, chosenCard)
-            }
-          })
-        } 
-      }
-    })
-
-    client.on("checkAI", lobbyId => {
-      Lobby.find({ lobbyId })
-        .then(lobby => {
-          AI = lobby.AIUsers
-          console.log(AI)
-          for(let i = 0; i < AI.length; i++) {
-            if(AI[i].czar) {
-              cardWins.findOne({ blackCard: lobby.currBlack.text })
-              .then(bCard => {
-                cards = lobby.playedWhite
-                  let winCount = 0
-                  const pickedCard = cards.reduce((chosen, card) => {
-                    const index = bCard.winningCards.findIndex(a => a.card === card)
-                    if(index !== -1) {
-                      if(bCard.winningCards[index].count > winCount) {
-                        winCount = bCard.winningCards[index].count
-                        return card
-                      } else {
-                        return chosen
-                      }
-                    } else {
-                      return chosen
-                    }
-                  })
-                socket.emit("AI pick", pickedCard)
-              })
-            }
-          }
-        })
-    })
-
     client.on('Create Lobby', (sets, strId, owner, AI) => {
-      Lobby.create({ users: [], AIUsers: [], strId, sets, gameState: 'Idle', owner, currBlack: null, playedWhite: [], czar: '' })
+      Lobby.create({ users: [], strId, sets, gameState: 'Idle', owner, currBlack: null, playedWhite: [], czar: '' })
         .then(lobby => {
-           for (let i = 0; i < lobby.sets.length; i++) {
-            lobby.blackCards = lobby.blackCards.concat(sets[i].blackCards)
-            lobby.whiteCards = lobby.whiteCards.concat(sets[i].whiteCards)
-          }
-          for(let x = 0; x < AI.length; x++) {
+          for(let x=0; x < AI.length; x++) {
             let cards = []
             for (let i = 0; i < 10; i++) {
               cards.push(lobby.whiteCards.splice(Math.floor(Math.random() * lobby.whiteCards.length), 1)[0])
             }
             lobby.users.push({ name: AI[x].name, id: AI[x]._id, points: 0, czar: false, owner: false, cards, played: false })
-            lobby.AIUsers.push({ name: AI[x].name, id: AI[x]._id, points: 0, czar: false, owner: false, cards, played: false })
+          }
+           for (let i = 0; i < lobby.sets.length; i++) {
+            lobby.blackCards = lobby.blackCards.concat(sets[i].blackCards)
+            lobby.whiteCards = lobby.whiteCards.concat(sets[i].whiteCards)
           }
           lobby.save()
             .then(() => {
@@ -202,9 +142,6 @@ module.exports = (io) => {
     })
 
     client.on('Submit Card', (lobbyId, userId, card) => {
-      console.log("lobby id is " + lobbyId)
-      console.log("botid is " + userId)
-      console.log('card is ' + card)
       Lobby.findById(lobbyId)
         .then(lobby => {
           const user = lobby.users.reduce((me, user) => {
@@ -218,7 +155,6 @@ module.exports = (io) => {
           user.cards.splice(user.cards.indexOf(card), 1)
           user.cards.push(lobby.whiteCards.splice(Math.floor(Math.random() * lobby.whiteCards.length), 1)[0])
           user.played = true;
-
           lobby.save()
             .then(lobby => {
               Lobby.findByIdAndUpdate(lobbyId, lobby)
@@ -238,7 +174,7 @@ module.exports = (io) => {
                 })
                 .catch(err => console.log(err))
 
-            }).catch(err => console.log(err))
+            })
         })
         .catch(err => console.log(err))
 
