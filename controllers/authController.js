@@ -29,13 +29,14 @@ module.exports = (io) => {
                 result: 'Unsuccessful',
                 message: 'Wrong Email or Password',
               })
-            }
-            const token = jwt.sign({ _id: user._id, name: user.name }, process.env.SECRET, { expiresIn: '60 days' })
-            client.emit('authRes', {
-              result: 'Success',
-              userId: user._id,
-              token,
-            })
+            } else {
+              const token = jwt.sign({ _id: user._id, name: user.name }, process.env.SECRET, { expiresIn: '60 days' })
+              client.emit('authRes', {
+                result: 'Success',
+                userId: user._id,
+                token,
+              })
+            }  
           })
         })
         .catch((err) => {
