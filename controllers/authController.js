@@ -20,8 +20,10 @@ module.exports = (io) => {
             })
           }
           console.log("checking pwd")
+          console.log(body.password)
           // Check the password
           user.comparePassword(password, (err, isMatch) => {
+            console.log(isMatch)
             if (!isMatch) {
               // Password does not match
               client.emit('authRes', { 
