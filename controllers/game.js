@@ -29,7 +29,6 @@ module.exports = (io) => {
       Lobby.findOne({ strId })
         .then(lobby => {
           if(lobby) {
-            console.log("lobby fail")
             client.emit('Lobby Creation Fail', "A lobby with that name already exists")
           } else {
             Lobby.create({ users: [], strId, sets, gameState: 'Idle', owner, currBlack: null, playedWhite: [], czar: '' , creationDate: new Date()})
