@@ -19,9 +19,8 @@ module.exports = (io) => {
               message: 'Wrong Email or Password',
             })
           }
-          console.log("checking pwd")
-          console.log(body.password)
           // Check the password
+          console.log(password)
           user.comparePassword(password, (err, isMatch) => {
             console.log(isMatch)
             if (!isMatch) {

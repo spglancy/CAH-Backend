@@ -9,7 +9,6 @@ const UserSchema = new Schema({
   ai: Boolean,
 })
 
-// Salt that password
 UserSchema.pre('save', function (next) {
   const user = this
   if (!user.isModified('password')) {
@@ -23,9 +22,8 @@ UserSchema.pre('save', function (next) {
   })
 })
 
-// Work that password
 UserSchema.methods.comparePassword = (password, done) => {
-  bcrypt.compare(password, this.password, function (err, isMatch) {
+  bcrypt.compare(password, this.password, (err, isMatch) => {
     done(err, isMatch)
   })
 }
