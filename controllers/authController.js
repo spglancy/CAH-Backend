@@ -11,6 +11,7 @@ module.exports = (io) => {
       // Find this user name
       User.findOne({ email })
         .then((user) => {
+          console.log(user)
           if (!user) {
             // User not found
             client.emit('authRes', {
@@ -18,8 +19,8 @@ module.exports = (io) => {
               message: 'Wrong Email or Password',
             })
           }
+          console.log("checking pwd")
           // Check the password
-          // not working for some reason
           user.comparePassword(password, (err, isMatch) => {
             if (!isMatch) {
               // Password does not match
