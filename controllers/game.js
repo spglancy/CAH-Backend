@@ -25,26 +25,35 @@ module.exports = (io) => {
     })
 
     client.on('Create Lobby', (sets, strId, owner, AI) => {
-      Lobby.create({ users: [], strId, sets, gameState: 'Idle', owner, currBlack: null, playedWhite: [], czar: '' , creationDate: new Date()})
+      strId = strId.toLowerCase()
+      Lobby.findOne({ strId })
         .then(lobby => {
-          for(let x=0; x < AI.length; x++) {
-            let cards = []
-            for (let i = 0; i < 10; i++) {
-              cards.push(lobby.whiteCards.splice(Math.floor(Math.random() * lobby.whiteCards.length), 1)[0])
-            }
-            lobby.users.push({ name: AI[x].name, id: AI[x]._id, points: 0, czar: false, owner: false, cards, played: false })
-          }
-           for (let i = 0; i < lobby.sets.length; i++) {
-            lobby.blackCards = lobby.blackCards.concat(sets[i].blackCards)
-            lobby.whiteCards = lobby.whiteCards.concat(sets[i].whiteCards)
-          }
-          lobby.save()
-            .then(() => {
-              client.emit("Lobby Created", lobby._id)
+          if(lobby) {
+            client.emit('Lobby Creation Fail', "A lobby with that name already exists")
+          } else {
+            Lobby.create({ users: [], strId, sets, gameState: 'Idle', owner, currBlack: null, playedWhite: [], czar: '' , creationDate: new Date()})
+            .then(lobby => {
+              // for(let x=0; x < AI.length; x++) {
+              //   let cards = []
+              //   for (let i = 0; i < 10; i++) {
+              //     cards.push(lobby.whiteCards.splice(Math.floor(Math.random() * lobby.whiteCards.length), 1)[0])
+              //   }
+              //   lobby.users.push({ name: AI[x].name, id: AI[x]._id, points: 0, czar: false, owner: false, cards, played: false })
+              // }
+               for (let i = 0; i < lobby.sets.length; i++) {
+                lobby.blackCards = lobby.blackCards.concat(sets[i].blackCards)
+                lobby.whiteCards = lobby.whiteCards.concat(sets[i].whiteCards)
+              }
+              lobby.save()
+                .then(() => {
+                  client.emit("Lobby Created", lobby._id)
+                })
+                .catch(err => console.log(err))
             })
             .catch(err => console.log(err))
+          }
         })
-        .catch(err => console.log(err))
+      
     })
 
     client.on('Join Lobby', (lobbyId, user) => {
