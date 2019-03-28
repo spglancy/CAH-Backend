@@ -5,12 +5,12 @@ module.exports = (io) => {
   const User = require('../models/user')
   io.on('connection', (client) => {
 
-    client.on('Create AI', (name) => {
-      User.create({ name })
-        .then(u => {
-          client.emit("Add AI", u)
-        })
-    })
+    // client.on('Create AI', (name) => {
+    //   User.create({ name })
+    //     .then(u => {
+    //       client.emit("Add AI", u)
+    //     })
+    // })
 
     client.on('Find Lobby', (strId) => {
       Lobby.find({strId})
