@@ -189,7 +189,7 @@ module.exports = (io) => {
                   .then(bCard => {
                     let count = 0
                     bot.cards.reduce((acc, card) => {
-                      
+                      const index = bCard.winningCards.findIndex()
                     })
                   })
               }
