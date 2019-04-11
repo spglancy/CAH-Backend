@@ -3,6 +3,7 @@ const Schema = mongoose.Schema
 
 const LobbySchema = new Schema({
   users: [],
+  AI: [],
   creationDate: Date,
   owner: String,
   whiteCards: [],

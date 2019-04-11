@@ -7,7 +7,6 @@ module.exports = (io) => {
 
     client.on('Create AI', (name) => {
       // create an AI user
-      console.log("pinging")
       console.log(name)
       User.create({ name })
         .then(u => {
@@ -37,19 +36,20 @@ module.exports = (io) => {
           } else {
             Lobby.create({ users: [], strId, sets, gameState: 'Idle', owner, currBlack: null, playedWhite: [], czar: '' , creationDate: new Date()})
             .then(lobby => {
-              // starts by adding Ai users to the lobby
+              // sets the deck for the lobby
+              for (let i = 0; i < lobby.sets.length; i++) {
+                lobby.blackCards = lobby.blackCards.concat(sets[i].blackCards)
+                lobby.whiteCards = lobby.whiteCards.concat(sets[i].whiteCards)
+              }
+              // adding Ai users to the lobby
               for(let x = 0; x < AI.length; x++) {
                 let cards = []
                 for (let i = 0; i < 10; i++) {
                   cards.push(lobby.whiteCards.splice(Math.floor(Math.random() * lobby.whiteCards.length), 1)[0])
                 }
-                lobby.users.push({ name: AI[x].name, id: AI[x]._id, points: 0, czar: false, owner: false, cards, played: false })
+                lobby.users.push({ name: AI[x].name, bot: true, id: AI[x]._id, points: 0, czar: false, owner: false, cards, played: false })
               }
-              // sets the deck for the lobby
-               for (let i = 0; i < lobby.sets.length; i++) {
-                lobby.blackCards = lobby.blackCards.concat(sets[i].blackCards)
-                lobby.whiteCards = lobby.whiteCards.concat(sets[i].whiteCards)
-              }
+              
               lobby.save()
                 .then(() => {
                   client.emit("Lobby Created", lobby._id)
@@ -184,32 +184,62 @@ module.exports = (io) => {
           user.cards.splice(user.cards.indexOf(card), 1)
           user.cards.push(lobby.whiteCards.splice(Math.floor(Math.random() * lobby.whiteCards.length), 1)[0])
           user.played = true
-          lobby.AI.forEach(bot => {
-            if(bot.played = false){
-              if(!bot.czar) {
-                cardWins.find({ blackCard: lobby.currBlack.text })
+          // bot logic
+          lobby.users.forEach(bot => {
+            if(bot.bot) {
+              if(!bot.played){
+                cardWins.findOne({ blackCard: lobby.currBlack.text })
                   .then(bCard => {
-                    let count = 0
-                    const chosenCard = bot.cards.reduce((chosen, card) => {
-                      const index = bCard.winningCards.findIndex(a => a.card === card)
-                      if(index !== -1) {
-                        if(bCard.winningCards[index].count > winCount) {
-                          winCount = bCard.winningCards[index].count
-                          return card
-                        } else {
-                          return chosen
-                        }
-                      } else {
-                        return chosen
-                      }
-                    })
-                    lobby.playedWhite.push({ chosen, userId: bot._id, name: bot.name })
-                    bot.cards.splice(bot.cards.indexOf(chosen), 1)
-                    bot.cards.push(lobby.whiteCards.splice(Math.floor(Math.random() * lobby.whiteCards.length), 1[0]))
-                    bot.played = true
+                      if(bot.id === lobby.czar && lobby.playedWhite.length === lobby.users.length + lobby.AI.length - 1) {
+                        if(bCard !== null) {                            
+                          let winCount = 0
+                            const winningCard = lobby.playedWhite.reduce((chosen, card) => {
+                              const index = bCard.findIndex(a => a.card === card)
+                              if(index != -1) {
+                                if(bCard.winningCards[index].count > winCount) {
+                                  winCount = bCard.winningCards[index].count
+                                  return card
+                                } else {
+                                  return chosen
+                                }
+                              }
+                            })
+                            console.log(winningCard)
+                            client.emit('AI Czar', lobbyId, winningCard)
+                          } else {
+                            client.emit('AI Czar', lobbyId, lobby.playedWhite[Math.floor(Math.random(0, lobby.playedWhite.length))])
+                          }
+                      } else if(bot.id !== lobby.czar) {
+                           if(bCard !== null) {
+                            let winCount = 0
+                            const chosenCard = bot.cards.reduce((chosen, card) => {
+                              const index = bCard.winningCards.findIndex(a => a.card === card)
+                              if(index !== -1) {
+                                if(bCard.winningCards[index].count > winCount) {
+                                  winCount = bCard.winningCards[index].count
+                                  return card
+                                } else {
+                                  return chosen
+                                }
+                              } else {
+                                return chosen
+                              }
+                            })
+                            lobby.playedWhite.push({ card: chosenCard, userId: bot.id, name: bot.name })
+                            bot.cards.splice(bot.cards.indexOf(chosenCard), 1)
+                            bot.cards.push(lobby.whiteCards.splice(Math.floor(Math.random() * lobby.whiteCards.length), 1[0]))
+                            bot.played = true
+                          } else {
+                            const index = Math.floor(Math.random(0, bot.cards.length))
+                            lobby.playedWhite.push({ card: bot.cards[index], userId: bot.id, name: bot.name })
+                            bot.cards.splice(bot.cards.indexOf(index), 1)
+                            bot.cards.push(lobby.whiteCards.splice(index, 1[0]))
+                            bot.played = true                      
+                          }
+                    }
                   })
+                }
               }
-            }
           })
           lobby.save()
             .then(lobby => {

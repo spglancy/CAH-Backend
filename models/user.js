@@ -6,7 +6,7 @@ const UserSchema = new Schema({
   email: String,
   password: String,
   name: String,
-  ai: Boolean,
+  bot: Boolean,
 })
 
 UserSchema.pre('save', function (next) {
