@@ -5,14 +5,16 @@ module.exports = (io) => {
   const User = require('../models/user')
   io.on('connection', (client) => {
 
-    // client.on('Create AI', (name) => {
-    //   User.create({ name })
-    //     .then(u => {
-    //       client.emit("Add AI", u)
-    //     })
-    // })
+    client.on('Create AI', (name) => {
+      // create an AI user
+      User.create({ name })
+        .then(u => {
+          client.emit("Add AI", u)
+        })
+    })
 
     client.on('Find Lobby', (strId) => {
+      // find a lobby by name
       Lobby.find({strId})
       .then(lobbies => {
         if(lobbies.length > 0) {
@@ -33,13 +35,15 @@ module.exports = (io) => {
           } else {
             Lobby.create({ users: [], strId, sets, gameState: 'Idle', owner, currBlack: null, playedWhite: [], czar: '' , creationDate: new Date()})
             .then(lobby => {
-              // for(let x=0; x < AI.length; x++) {
-              //   let cards = []
-              //   for (let i = 0; i < 10; i++) {
-              //     cards.push(lobby.whiteCards.splice(Math.floor(Math.random() * lobby.whiteCards.length), 1)[0])
-              //   }
-              //   lobby.users.push({ name: AI[x].name, id: AI[x]._id, points: 0, czar: false, owner: false, cards, played: false })
-              // }
+              // starts by adding Ai users to the lobby
+              for(let x = 0; x < AI.length; x++) {
+                let cards = []
+                for (let i = 0; i < 10; i++) {
+                  cards.push(lobby.whiteCards.splice(Math.floor(Math.random() * lobby.whiteCards.length), 1)[0])
+                }
+                lobby.users.push({ name: AI[x].name, id: AI[x]._id, points: 0, czar: false, owner: false, cards, played: false })
+              }
+              // sets the deck for the lobby
                for (let i = 0; i < lobby.sets.length; i++) {
                 lobby.blackCards = lobby.blackCards.concat(sets[i].blackCards)
                 lobby.whiteCards = lobby.whiteCards.concat(sets[i].whiteCards)
@@ -57,6 +61,7 @@ module.exports = (io) => {
     })
 
     client.on('Join Lobby', (lobbyId, user) => {
+      // adds a user to the specified lobby
       client.join(lobbyId)
       Lobby.findById(lobbyId)
         .then(lobby => {
@@ -64,7 +69,7 @@ module.exports = (io) => {
           if (lobby.owner === user._id) {
             owner = true
           }
-
+          // asserts that the user is not already in the lobby
           if (!(lobby.users.reduce((me, userCheck) => {
             if (userCheck.id === user._id) {
               return (userCheck)
@@ -72,6 +77,7 @@ module.exports = (io) => {
               return me
             }
           }, null))) {
+            // instantiates user's hand and points
             let cards = []
             for (let i = 0; i < 10; i++) {
               cards.push(lobby.whiteCards.splice(Math.floor(Math.random() * lobby.whiteCards.length), 1)[0])
@@ -175,7 +181,20 @@ module.exports = (io) => {
           
           user.cards.splice(user.cards.indexOf(card), 1)
           user.cards.push(lobby.whiteCards.splice(Math.floor(Math.random() * lobby.whiteCards.length), 1)[0])
-          user.played = true;
+          user.played = true
+          lobby.AI.forEach(bot => {
+            if(bot.played = false){
+              if(!bot.czar) {
+                cardWins.find({ blackCard: lobby.currBlack.text })
+                  .then(bCard => {
+                    let count = 0
+                    bot.cards.reduce((acc, card) => {
+                      
+                    })
+                  })
+              }
+            }
+          })
           lobby.save()
             .then(lobby => {
               Lobby.findByIdAndUpdate(lobbyId, lobby)
