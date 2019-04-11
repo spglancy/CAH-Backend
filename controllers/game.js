@@ -7,6 +7,8 @@ module.exports = (io) => {
 
     client.on('Create AI', (name) => {
       // create an AI user
+      console.log("pinging")
+      console.log(name)
       User.create({ name })
         .then(u => {
           client.emit("Add AI", u)
@@ -188,9 +190,23 @@ module.exports = (io) => {
                 cardWins.find({ blackCard: lobby.currBlack.text })
                   .then(bCard => {
                     let count = 0
-                    bot.cards.reduce((acc, card) => {
-                      const index = bCard.winningCards.findIndex()
+                    const chosenCard = bot.cards.reduce((chosen, card) => {
+                      const index = bCard.winningCards.findIndex(a => a.card === card)
+                      if(index !== -1) {
+                        if(bCard.winningCards[index].count > winCount) {
+                          winCount = bCard.winningCards[index].count
+                          return card
+                        } else {
+                          return chosen
+                        }
+                      } else {
+                        return chosen
+                      }
                     })
+                    lobby.playedWhite.push({ chosen, userId: bot._id, name: bot.name })
+                    bot.cards.splice(bot.cards.indexOf(chosen), 1)
+                    bot.cards.push(lobby.whiteCards.splice(Math.floor(Math.random() * lobby.whiteCards.length), 1[0]))
+                    bot.played = true
                   })
               }
             }
