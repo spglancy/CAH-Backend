@@ -7,7 +7,6 @@ module.exports = (io) => {
 
     client.on('Create AI', (name) => {
       // create an AI user
-      console.log(name)
       User.create({ name })
         .then(u => {
           client.emit("Add AI", u)
@@ -42,14 +41,16 @@ module.exports = (io) => {
                 lobby.whiteCards = lobby.whiteCards.concat(sets[i].whiteCards)
               }
               // adding Ai users to the lobby
+              let numAI = 0
               for(let x = 0; x < AI.length; x++) {
+                numAI++
                 let cards = []
                 for (let i = 0; i < 10; i++) {
                   cards.push(lobby.whiteCards.splice(Math.floor(Math.random() * lobby.whiteCards.length), 1)[0])
                 }
                 lobby.users.push({ name: AI[x].name, bot: true, id: AI[x]._id, points: 0, czar: false, owner: false, cards, played: false })
               }
-              
+              lobby.numAI = numAI
               lobby.save()
                 .then(() => {
                   client.emit("Lobby Created", lobby._id)
@@ -119,6 +120,13 @@ module.exports = (io) => {
     })
 
     client.on('Select Winner', (lobbyId, card) => {
+
+
+        // for some reason its being called numerous times, seems like it might be a frontend issue
+
+
+      console.log("recieving")
+      console.log(card)
       Lobby.findById(lobbyId)
         .then(lobby => {
           winner = lobby.playedWhite.reduce((winner, playedCard) => (playedCard.card === card ? playedCard : winner), null)
@@ -170,6 +178,32 @@ module.exports = (io) => {
       })
     })
 
+    function aiSelect(bCard, lobby) {
+      if(bCard != null) {
+        let winCount = 0
+          const card = lobby.playedWhite.reduce((chosen, card) => {
+            const index = bCard.winningCards.findIndex(a => a.card === card)
+            if(index != -1) {
+              if(bCard.winningCards[index].count > winCount) {
+                winCount = bCard.winningCards[index].count
+                return card.card
+              } else {
+                return chosen
+              }
+            } else {
+              return chosen
+            }
+          }, lobby.playedWhite[0].card)
+          console.log("chosenCard")
+          client.emit('AI Czar', lobby._id, card)
+        } else {
+          console.log("randCard")
+          const card = lobby.playedWhite[Math.floor(Math.random() * lobby.playedWhite.length)].card
+          console.log(card)
+          client.emit('AI Czar', lobby._id, card)
+        }
+    }
+
     client.on('Submit Card', (lobbyId, userId, card) => {
       Lobby.findById(lobbyId)
         .then(lobby => {
@@ -185,31 +219,13 @@ module.exports = (io) => {
           user.cards.push(lobby.whiteCards.splice(Math.floor(Math.random() * lobby.whiteCards.length), 1)[0])
           user.played = true
           // bot logic
-          lobby.users.forEach(bot => {
+          let called = false
+          lobby.users.forEach((bot, index) => {
             if(bot.bot) {
               if(!bot.played){
                 cardWins.findOne({ blackCard: lobby.currBlack.text })
                   .then(bCard => {
-                      if(bot.id === lobby.czar && lobby.playedWhite.length === lobby.users.length + lobby.AI.length - 1) {
-                        if(bCard !== null) {                            
-                          let winCount = 0
-                            const winningCard = lobby.playedWhite.reduce((chosen, card) => {
-                              const index = bCard.findIndex(a => a.card === card)
-                              if(index != -1) {
-                                if(bCard.winningCards[index].count > winCount) {
-                                  winCount = bCard.winningCards[index].count
-                                  return card
-                                } else {
-                                  return chosen
-                                }
-                              }
-                            })
-                            console.log(winningCard)
-                            client.emit('AI Czar', lobbyId, winningCard)
-                          } else {
-                            client.emit('AI Czar', lobbyId, lobby.playedWhite[Math.floor(Math.random(0, lobby.playedWhite.length))])
-                          }
-                      } else if(bot.id !== lobby.czar) {
+                        if(bot.id !== lobby.czar) {
                            if(bCard !== null) {
                             let winCount = 0
                             const chosenCard = bot.cards.reduce((chosen, card) => {
@@ -230,43 +246,39 @@ module.exports = (io) => {
                             bot.cards.push(lobby.whiteCards.splice(Math.floor(Math.random() * lobby.whiteCards.length), 1[0]))
                             bot.played = true
                           } else {
-                            const index = Math.floor(Math.random(0, bot.cards.length))
+                            const index = Math.floor(Math.random() * bot.cards.length)
                             lobby.playedWhite.push({ card: bot.cards[index], userId: bot.id, name: bot.name })
                             bot.cards.splice(bot.cards.indexOf(index), 1)
                             bot.cards.push(lobby.whiteCards.splice(index, 1[0]))
-                            bot.played = true                      
+                            bot.played = true
                           }
+                    }
+                    if(index === lobby.numAI - 1) {
+                      lobby.save()
+                      .then(lobby => {
+                        Lobby.findByIdAndUpdate(lobbyId, lobby)
+                          .then(newLobby => {
+                            if (newLobby.playedWhite.length === newLobby.users.length - 1) {
+                              newLobby.gameState = 'Selecting'
+                              newLobby.save().then(
+                                io.to(lobbyId).emit('Update Players', newLobby)
+                              )
+                            }
+                            else {
+                              io.to(lobbyId).emit('Update Players', lobby)
+                            }
+                          })
+                      })
+                      if(lobby.playedWhite.length === lobby.users.length - 1 && called == false) {
+                        aiSelect(bCard, lobby)
+                        called = true
+                      }
                     }
                   })
                 }
               }
-          })
-          lobby.save()
-            .then(lobby => {
-              Lobby.findByIdAndUpdate(lobbyId, lobby)
-                .then(newLobby => {
-
-                  if (newLobby.playedWhite.length === newLobby.users.length - 1) {
-                    newLobby.gameState = 'Selecting'
-                    newLobby.save().then(
-                      io.to(lobbyId).emit('Update Players', newLobby)
-
-                    )
-                  }
-                  else {
-                    io.to(lobbyId).emit('Update Players', lobby)
-                  }
-
-                })
-                .catch(err => console.log(err))
-
-            })
         })
-        .catch(err => console.log(err))
-
-    })
-
+      })
   })
-
-
+})
 }
